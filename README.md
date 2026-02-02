@@ -84,7 +84,7 @@
 
 
 ## Download APK (Install on any Android phone)
-**Click here → [Download World Explorer APK](https://github.com/hanayaregal/world_explorer/releases/download/v1.0/app-release.apk)**
+**Click here → [Download World Explorer APK](https://github.com/hanayaregal/world_explorer/releases/download/v1.1/app-release.apk)**
 
 
 ## Made with love in Ethiopia
