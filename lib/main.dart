@@ -1,24 +1,48 @@
-// lib/main.dart
 import 'package:flutter/material.dart';
-import 'screens/home_screen.dart';  // ← YOUR MAIN SCREEN
+import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:provider/provider.dart';
+import 'firebase_options.dart';
+import 'screens/home_screen.dart';
+import 'theme_provider.dart'; // Make sure this file exists!
 
-void main() {
-  runApp(const WorldExplorerApp());
+Future<void> ensureSignedIn() async {
+  try {
+    if (FirebaseAuth.instance.currentUser == null) {
+      await FirebaseAuth.instance.signInAnonymously();
+    }
+  } catch (_) {}
 }
 
-class WorldExplorerApp extends StatelessWidget {
-  const WorldExplorerApp({super.key});
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  try {
+    await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+  } catch (_) {}
+
+  await ensureSignedIn();
+
+  runApp(
+    ChangeNotifierProvider(
+      create: (_) => ThemeProvider(),
+      child: const MyApp(),
+    ),
+  );
+}
+
+class MyApp extends StatelessWidget {
+  const MyApp({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final themeProvider = Provider.of<ThemeProvider>(context);
+
     return MaterialApp(
-      title: 'World Explorer',
       debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        primarySwatch: Colors.blue,
-        useMaterial3: true,
-      ),
-      home: const HomeScreen(),  // ← THIS MUST BE YOUR HomeScreen
+      title: 'World Explorer',
+      theme: themeProvider.themeData, // Light/Dark theme from provider
+      home: const HomeScreen(),
     );
   }
 }

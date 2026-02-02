@@ -1,4 +1,4 @@
-// lib/screens/ethiopia_quiz_screen.dart
+// lib/screens/world_quiz_screen.dart
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'dart:math';
@@ -6,36 +6,36 @@ import 'dart:math';
 enum AppLanguage { english, amharic }
 enum QuizMode { typing, multipleChoice }
 
-class EthiopiaQuizScreen extends StatefulWidget {
-  const EthiopiaQuizScreen({super.key});
+class WorldQuizScreen extends StatefulWidget {
+  const WorldQuizScreen({super.key, required String title, required String quizType, required List<Map<String, String>> data, required String questionLabel});
 
   @override
-  State<EthiopiaQuizScreen> createState() => _EthiopiaQuizScreenState();
+  State<WorldQuizScreen> createState() => _WorldQuizScreenState();
 }
 
-class _EthiopiaQuizScreenState extends State<EthiopiaQuizScreen> {
+class _WorldQuizScreenState extends State<WorldQuizScreen> {
   AppLanguage language = AppLanguage.english;
   QuizMode mode = QuizMode.typing;
 
-  final List<Map<String, String>> regions = [
-    {"region": "Addis Ababa", "capital": "Addis Ababa"},
-    {"region": "Afar", "capital": "Semera"},
-    {"region": "Amhara", "capital": "Bahir Dar"},
-    {"region": "Benishangul-Gumuz", "capital": "Asosa"},
-    {"region": "Dire Dawa", "capital": "Dire Dawa"},
-    {"region": "Gambela", "capital": "Gambela"},
-    {"region": "Harari", "capital": "Harar"},
-    {"region": "Oromia", "capital": "Finfinne"},
-    {"region": "Sidama", "capital": "Hawassa"},
-    {"region": "Somali", "capital": "Jijiga"},
-    {"region": "South Ethiopia", "capital": "Wolaita Sodo"},
-    {"region": "South West Ethiopia", "capital": "Bonga"},
-    {"region": "Central Ethiopia", "capital": "Shashemene"},
-    {"region": "Tigray", "capital": "Mekelle"},
+  final List<Map<String, String>> countries = [
+    {"country": "USA", "capital": "Washington, D.C."},
+    {"country": "Canada", "capital": "Ottawa"},
+    {"country": "Brazil", "capital": "Brasília"},
+    {"country": "UK", "capital": "London"},
+    {"country": "France", "capital": "Paris"},
+    {"country": "Germany", "capital": "Berlin"},
+    {"country": "Italy", "capital": "Rome"},
+    {"country": "Japan", "capital": "Tokyo"},
+    {"country": "China", "capital": "Beijing"},
+    {"country": "India", "capital": "New Delhi"},
+    {"country": "Australia", "capital": "Canberra"},
+    {"country": "Egypt", "capital": "Cairo"},
+    {"country": "South Africa", "capital": "Pretoria"},
+    {"country": "Russia", "capital": "Moscow"},
   ];
 
-  late List<Map<String, String>> remainingRegions;
-  Map<String, String>? currentRegion;
+  late List<Map<String, String>> remainingCountries;
+  Map<String, String>? currentCountry;
   String correctAnswer = "";
   List<String> options = [];
   int score = 0;
@@ -47,26 +47,27 @@ class _EthiopiaQuizScreenState extends State<EthiopiaQuizScreen> {
   @override
   void initState() {
     super.initState();
-    remainingRegions = List.from(regions)..shuffle();
+    remainingCountries = List.from(countries)..shuffle();
     pickNewQuestion();
   }
 
   void pickNewQuestion() {
-    if (remainingRegions.isEmpty) {
+    if (remainingCountries.isEmpty) {
       endQuiz();
       return;
     }
 
     setState(() {
-      currentRegion = remainingRegions.removeLast();
-      correctAnswer = currentRegion!["capital"]!;
+      currentCountry = remainingCountries.removeLast();
+      correctAnswer = currentCountry!["capital"]!;
 
       options = [correctAnswer];
       while (options.length < 4) {
-        final wrong = regions[Random().nextInt(regions.length)]["capital"]!;
+        final wrong = countries[Random().nextInt(countries.length)]["capital"]!;
         if (!options.contains(wrong)) options.add(wrong);
       }
       options.shuffle();
+
       total++;
       answerCtrl.clear();
       answered = false;
@@ -79,7 +80,9 @@ class _EthiopiaQuizScreenState extends State<EthiopiaQuizScreen> {
     String userAnswer = answerCtrl.text.trim();
     if (userAnswer.isEmpty) {
       setState(() {
-        result = language == AppLanguage.english ? "Please type an answer!" : "እባክዎ መልስ ይጻፉ!";
+        result = language == AppLanguage.english
+            ? "Please type an answer!"
+            : "እባክዎ መልስ ይጻፉ!";
       });
       return;
     }
@@ -121,9 +124,11 @@ class _EthiopiaQuizScreenState extends State<EthiopiaQuizScreen> {
         'name': playerName,
         'score': score,
         'timestamp': FieldValue.serverTimestamp(),
-        'quizType': 'Ethiopian Regions',
+        'quizType': 'World Countries',
       }, SetOptions(merge: true));
-    } catch (e) {}
+    } catch (e) {
+      // Silent fail (you can add debug print if needed)
+    }
   }
 
   Future<void> endQuiz() async {
@@ -139,7 +144,11 @@ class _EthiopiaQuizScreenState extends State<EthiopiaQuizScreen> {
         title: Center(
           child: Text(
             language == AppLanguage.english ? "Quiz Complete!" : "ፈተና ጨርሰዋል!",
-            style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.purple[800]),
+            style: TextStyle(
+              fontSize: 24,
+              fontWeight: FontWeight.bold,
+              color: Colors.purple[800],
+            ),
           ),
         ),
         content: Column(
@@ -210,8 +219,8 @@ class _EthiopiaQuizScreenState extends State<EthiopiaQuizScreen> {
         SnackBar(
           content: Text(
             language == AppLanguage.english
-                ? "Score saved! Check Analytics → Global Rank 🌍"
-                : "ውጤት ተቀምጧል! ወደ ትንታኔ → ዓለም አቀፍ ደረጃ ይመልከቱ 🌍",
+                ? "Score saved! Check Analytics → Global Rank"
+                : "ውጤት ተቀምጧል! ወደ ትንታኔ → ዓለም አቀፍ ደረጃ ይመልከቱ",
           ),
           backgroundColor: Colors.purple,
         ),
@@ -219,7 +228,7 @@ class _EthiopiaQuizScreenState extends State<EthiopiaQuizScreen> {
     }
 
     setState(() {
-      remainingRegions = List.from(regions)..shuffle();
+      remainingCountries = List.from(countries)..shuffle();
       score = 0;
       total = 0;
       pickNewQuestion();
@@ -231,7 +240,7 @@ class _EthiopiaQuizScreenState extends State<EthiopiaQuizScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text(
-          language == AppLanguage.english ? "Ethiopian Regions Quiz" : "የኢትዮጵያ ክልሎች ፈተና",
+          language == AppLanguage.english ? "World Countries Quiz" : "ዓለም አቀፍ አገሮች ፈተና",
           style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
         ),
         backgroundColor: Colors.purple[700],
@@ -239,7 +248,7 @@ class _EthiopiaQuizScreenState extends State<EthiopiaQuizScreen> {
         centerTitle: true,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
-          onPressed: () => Navigator.pop(context), // BACK TO QUIZZES LIST
+          onPressed: () => Navigator.pop(context),
         ),
         actions: [
           DropdownButton<AppLanguage>(
@@ -267,17 +276,24 @@ class _EthiopiaQuizScreenState extends State<EthiopiaQuizScreen> {
           padding: const EdgeInsets.all(20),
           child: Column(
             children: [
+              // Score Card (same as Ethiopia quiz)
               Card(
                 color: Colors.purple[50],
                 child: Padding(
                   padding: const EdgeInsets.all(16),
                   child: Text(
                     language == AppLanguage.english ? "Score: $score / $total" : "ውጤት: $score / $total",
-                    style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold, color: Colors.purple[800]),
+                    style: TextStyle(
+                      fontSize: 26,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.purple[800],
+                    ),
                   ),
                 ),
               ),
               const SizedBox(height: 20),
+
+              // Mode Toggle (same buttons)
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
@@ -301,25 +317,34 @@ class _EthiopiaQuizScreenState extends State<EthiopiaQuizScreen> {
                 ],
               ),
               const SizedBox(height: 30),
+
+              // Question Card (same style)
               Card(
                 elevation: 4,
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
                 child: Padding(
                   padding: const EdgeInsets.all(30),
                   child: Text(
-                    currentRegion?["region"] ?? "",
-                    style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: Colors.purple[800]),
+                    currentCountry?["country"] ?? "",
+                    style: TextStyle(
+                      fontSize: 28,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.purple[800],
+                    ),
                     textAlign: TextAlign.center,
                   ),
                 ),
               ),
               const SizedBox(height: 20),
+
               Text(
                 language == AppLanguage.english ? "What is the capital?" : "ዋና ከተማው ምንድን ነው?",
                 style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 30),
+
+              // Typing mode input (same decoration)
               if (mode == QuizMode.typing)
                 TextField(
                   controller: answerCtrl,
@@ -331,25 +356,18 @@ class _EthiopiaQuizScreenState extends State<EthiopiaQuizScreen> {
                     filled: true,
                     fillColor: Colors.white,
                     contentPadding: const EdgeInsets.symmetric(vertical: 20, horizontal: 14),
-
-                    // ✅ FIX: define both enabledBorder and focusedBorder
                     enabledBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(15),
-                      borderSide: const BorderSide(
-                        color: Colors.purple,
-                        width: 1.5,
-                      ),
+                      borderSide: const BorderSide(color: Colors.purple, width: 1.5),
                     ),
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(15),
-                      borderSide: const BorderSide(
-                        color: Colors.purple,
-                        width: 2,
-                      ),
+                      borderSide: const BorderSide(color: Colors.purple, width: 2),
                     ),
                   ),
                 ),
 
+              // Multiple choice (same feedback colors)
               if (mode == QuizMode.multipleChoice)
                 Column(
                   children: options.map((opt) => Padding(
@@ -369,7 +387,10 @@ class _EthiopiaQuizScreenState extends State<EthiopiaQuizScreen> {
                     ),
                   )).toList(),
                 ),
+
               const SizedBox(height: 35),
+
+              // Submit button for typing mode
               if (mode == QuizMode.typing)
                 Center(
                   child: ElevatedButton(
@@ -384,7 +405,10 @@ class _EthiopiaQuizScreenState extends State<EthiopiaQuizScreen> {
                     ),
                   ),
                 ),
+
               const SizedBox(height: 10),
+
+              // Result feedback card
               if (result.isNotEmpty)
                 Card(
                   color: result.contains("Correct") || result.contains("ትክክል") ? Colors.green[100] : Colors.red[100],
@@ -401,7 +425,10 @@ class _EthiopiaQuizScreenState extends State<EthiopiaQuizScreen> {
                     ),
                   ),
                 ),
+
               const SizedBox(height: 30),
+
+              // Next / Play Again button
               Center(
                 child: ElevatedButton(
                   onPressed: answered ? pickNewQuestion : null,
@@ -410,13 +437,14 @@ class _EthiopiaQuizScreenState extends State<EthiopiaQuizScreen> {
                     padding: const EdgeInsets.symmetric(horizontal: 60, vertical: 18),
                   ),
                   child: Text(
-                    remainingRegions.isEmpty
+                    remainingCountries.isEmpty
                         ? (language == AppLanguage.english ? "Play Again" : "እንደገና ይጫወቱ")
                         : (language == AppLanguage.english ? "Next" : "ቀጣይ"),
                     style: const TextStyle(fontSize: 18, color: Colors.white),
                   ),
                 ),
               ),
+              const SizedBox(height: 40),
             ],
           ),
         ),
