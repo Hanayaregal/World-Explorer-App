@@ -1,9 +1,22 @@
 import 'package:flutter/material.dart';
-import '../data/default_countries.dart';
-//import 'data/default_countries.dart';
+
+class Country {
+  final String name;
+  final String continent;
+  final int population;
+  final String flagUrl;
+
+  Country({
+    required this.name,
+    required this.continent,
+    required this.population,
+    required this.flagUrl,
+  });
+}
 
 class CountryDetailsScreen extends StatelessWidget {
   final Country country;
+
   const CountryDetailsScreen({super.key, required this.country});
 
   @override
@@ -30,8 +43,7 @@ class CountryDetailsScreen extends StatelessWidget {
             const SizedBox(height: 19),
             Text(
               country.name,
-              style:
-              const TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
+              style: const TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 10),
             Text(

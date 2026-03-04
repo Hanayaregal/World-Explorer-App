@@ -1,31 +1,33 @@
-import '../screens/world_quiz_screen.dart';
-//import 'world_quiz_screen.dart';
+import 'package:flutter/material.dart';
+import '../screens/smart_quiz_screen.dart';
 
 final flagNameData = [
   {
     "name": "France",
-    "flag": "https://flagcdn.com/w320/fr.png"
+    "flags": {"png": "https://flagcdn.com/w320/fr.png"}
   },
   {
     "name": "Germany",
-    "flag": "https://flagcdn.com/w320/de.png"
+    "flags": {"png": "https://flagcdn.com/w320/de.png"}
   },
   {
     "name": "Japan",
-    "flag": "https://flagcdn.com/w320/jp.png"
+    "flags": {"png": "https://flagcdn.com/w320/jp.png"}
   },
   {
     "name": "Brazil",
-    "flag": "https://flagcdn.com/w320/br.png"
+    "flags": {"png": "https://flagcdn.com/w320/br.png"}
   },
 ];
 
-class FlagNameQuizScreen extends WorldQuizScreen {
-  FlagNameQuizScreen({super.key})
-      : super(
-    title: "Flag to Country Quiz",
-    quizType: "Flag → Country",
-    data: flagNameData,
-    questionLabel: "name",
-  );
+class FlagNameQuizScreen extends StatelessWidget {
+  const FlagNameQuizScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return SmartQuizScreen(
+      countries: flagNameData,
+      quizType: "name", // Quiz asks for country name from flag
+    );
+  }
 }

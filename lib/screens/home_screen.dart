@@ -1,15 +1,15 @@
 import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:intl/intl.dart';
 import 'package:world_explorer/screens/profile_screen.dart';
 import 'package:world_explorer/screens/quizzes_screen.dart';
+import '../data/ethiopia_data.dart';
+import '../data/favorites.dart';
 import '../widgets/country_card.dart';
 import 'analytics_screen.dart';
-//import 'quizzes/quizzes_screen.dart';
-import 'package:cached_network_image/cached_network_image.dart';
+import 'package:world_explorer/data/default_countries.dart';
 
 // NEW: Simple Debouncer class (added only this)
 class Debouncer {
@@ -139,9 +139,7 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 }
-
 // ── HOME CONTENT ────────────────────────────────────────────────────────────
-
 class HomeContent extends StatefulWidget {
   const HomeContent({super.key});
 
@@ -152,147 +150,17 @@ class HomeContent extends StatefulWidget {
 class _HomeContentState extends State<HomeContent> {
   final TextEditingController _searchController = TextEditingController();
   String _searchQuery = '';
-
   final Debouncer _debouncer = Debouncer(milliseconds: 400);
-
   List<dynamic> displayCountries = [];
   List<dynamic> allCountries = [];
-  List<String> _autocompleteSuggestions = [];
-
+  List<dynamic> _autocompleteSuggestions = []; // Changed to List<dynamic>
   bool isLoading = false;
+  bool _isSearching = false;
+  bool _showSuggestions = false;
   int? hoveredIndex;
   String? selectedFavorite;
-
-  final List<Map<String, dynamic>> ethiopiaRegions = [
-    {"region": "Addis Ababa", "capital": "Addis Ababa"},
-    {"region": "Afar", "capital": "Semera"},
-    {"region": "Amhara", "capital": "Bahir Dar"},
-    {"region": "Benishangul-Gumuz", "capital": "Asosa"},
-    {"region": "Dire Dawa", "capital": "Dire Dawa"},
-    {"region": "Gambela", "capital": "Gambela"},
-    {"region": "Harari", "capital": "Harar"},
-    {"region": "Oromia", "capital": "Finfinne"},
-    {"region": "Sidama", "capital": "Hawassa"},
-    {"region": "Somali", "capital": "Jijiga"},
-    {"region": "South Ethiopia", "capital": "Wolaita Sodo"},
-    {"region": "South West Ethiopia", "capital": "Bonga"},
-    {"region": "Central Ethiopia", "capital": "Shashemene"},
-    {"region": "Tigray", "capital": "Mekelle"},
-  ];
-
-  final Map<String, List<Map<String, String>>> ethiopiaZones = {
-    "Addis Ababa": [
-      {
-        "name": "City Administration",
-        "description": "Modern capital with African Union headquarters, stunning skyline and Holy Trinity Cathedral",
-      },
-    ],
-    "Afar": [
-      {
-        "name": "Awsi Rasu (Zone 1)",
-        "description": "Danakil Depression — one of the hottest places on Earth with colorful salt lakes and Dallol volcano",
-      },
-    ],
-    "Amhara": [
-      {
-        "name": "North Gondar",
-        "description": "Historic Gondar — UNESCO-listed Fasil Ghebbi royal castles and palaces",
-      },
-      {
-        "name": "West Gojjam",
-        "description": "Blue Nile Falls (Tis Abay) and ancient island monasteries on Lake Tana",
-      },
-      {
-        "name": "South Wollo",
-        "description": "Lalibela — incredible rock-hewn churches carved from solid rock (UNESCO)",
-      },
-    ],
-    "Benishangul-Gumuz": [
-      {
-        "name": "Metekel",
-        "description": "Grand Ethiopian Renaissance Dam (GERD) — Africa's largest hydropower project",
-      },
-    ],
-    "Dire Dawa": [
-      {
-        "name": "City Administration",
-        "description": "Historic railway station and multicultural commercial hub",
-      },
-    ],
-    "Gambela": [
-      {
-        "name": "Anyuak Zone",
-        "description": "Gambela National Park — diverse wildlife and Baro River landscapes",
-      },
-    ],
-    "Harari": [
-      {
-        "name": "City Administration",
-        "description": "Ancient walled city of Harar Jugol — UNESCO World Heritage with 82 mosques",
-      },
-    ],
-    "Oromia": [
-      {
-        "name": "Bale",
-        "description": "Bale Mountains National Park — endemic Ethiopian wolf and highland scenery",
-      },
-      {
-        "name": "Jimma",
-        "description": "Birthplace of Arabica coffee with lush rainforests",
-      },
-    ],
-    "Sidama": [
-      {
-        "name": "Sidama Zone",
-        "description": "Premium Sidamo coffee and beautiful Lake Hawassa",
-      },
-    ],
-    "Somali": [
-      {
-        "name": "Fafan",
-        "description": "Jijiga city and surrounding pastoral lands",
-      },
-    ],
-    "South Ethiopia": [
-      {
-        "name": "Wolayita",
-        "description": "Wolaita Sodo city with fertile lands and traditional culture",
-      },
-    ],
-    "South West Ethiopia": [
-      {
-        "name": "Kafa",
-        "description": "Birthplace of coffee, UNESCO Kafa Biosphere Reserve with wild forests",
-      },
-    ],
-    "Central Ethiopia": [
-      {
-        "name": "Gurage",
-        "description": "Known for enset cultivation and traditional round houses",
-      },
-    ],
-    "Tigray": [
-      {
-        "name": "Central Tigray",
-        "description": "Ancient Axum — giant obelisks and archaeological treasures",
-      },
-      {
-        "name": "Eastern Tigray",
-        "description": "Gheralta rock-hewn churches in dramatic cliffs",
-      },
-    ],
-  };
-
-  final List<Map<String, dynamic>> favorites = [
-    {"name": "Ethiopia", "flag": "https://flagcdn.com/w320/et.png", "type": "country"},
-    {"name": "Japan", "flag": "https://flagcdn.com/w320/jp.png", "type": "country"},
-    {"name": "Brazil", "flag": "https://flagcdn.com/w320/br.png", "type": "country"},
-    {"name": "Germany", "flag": "https://flagcdn.com/w320/de.png", "type": "country"},
-    {"name": "Africa", "flag": "globe", "type": "continent"},
-    {"name": "Asia", "flag": "globe", "type": "continent"},
-    {"name": "Europe", "flag": "globe", "type": "continent"},
-    {"name": "America", "flag": "globe", "type": "continent"},
-  ];
+  OverlayEntry? _suggestionsOverlay;
+  final FocusNode _searchFocusNode = FocusNode(); // NEW: Focus node for search field
 
   List<String> _getSubregions(String continent) {
     if (continent == "Africa") {
@@ -307,153 +175,34 @@ class _HomeContentState extends State<HomeContent> {
     return [];
   }
 
-  final List<Map<String, dynamic>> defaultCountries = [
-    {
-      "name": {"common": "Brazil"},
-      "capital": ["Brasília"],
-      "population": 215313498,
-      "flags": {"png": "https://flagcdn.com/w320/br.png"},
-      "languages": {"por": "Portuguese"},
-      "currencies": {"BRL": {"name": "Brazilian real", "symbol": "R\$"}},
-      "region": "Americas",
-      "subregion": "South America",
-      "timezones": ["UTC-05:00"],
-      "idd": {"root": "+5", "suffixes": ["5"]},
-      "area": 8515767,
-    },
-    {
-      "name": {"common": "Germany"},
-      "capital": ["Berlin"],
-      "population": 83240525,
-      "flags": {"png": "https://flagcdn.com/w320/de.png"},
-      "languages": {"deu": "German"},
-      "currencies": {"EUR": {"name": "Euro", "symbol": "€"}},
-      "region": "Europe",
-      "subregion": "Western Europe",
-      "timezones": ["UTC+01:00"],
-      "idd": {"root": "+4", "suffixes": ["9"]},
-      "area": 357114,
-    },
-    {
-      "name": {"common": "Nigeria"},
-      "capital": ["Abuja"],
-      "population": 218541212,
-      "flags": {"png": "https://flagcdn.com/w320/ng.png"},
-      "languages": {"eng": "English"},
-      "currencies": {"NGN": {"name": "Nigerian naira", "symbol": "₦"}},
-      "region": "Africa",
-      "subregion": "Western Africa",
-      "timezones": ["UTC+01:00"],
-      "idd": {"root": "+2", "suffixes": ["34"]},
-      "area": 923768,
-    },
-    {
-      "name": {"common": "India"},
-      "capital": ["New Delhi"],
-      "population": 1428627663,
-      "flags": {"png": "https://flagcdn.com/w320/in.png"},
-      "languages": {"eng": "English", "hin": "Hindi"},
-      "currencies": {"INR": {"name": "Indian rupee", "symbol": "₹"}},
-      "region": "Asia",
-      "subregion": "Southern Asia",
-      "timezones": ["UTC+05:30"],
-      "idd": {"root": "+9", "suffixes": ["1"]},
-      "area": 3287590,
-    },
-    {
-      "name": {"common": "France"},
-      "capital": ["Paris"],
-      "population": 67935660,
-      "flags": {"png": "https://flagcdn.com/w320/fr.png"},
-      "languages": {"fra": "French"},
-      "currencies": {"EUR": {"name": "Euro", "symbol": "€"}},
-      "region": "Europe",
-      "subregion": "Western Europe",
-      "timezones": ["UTC+01:00"],
-      "idd": {"root": "+3", "suffixes": ["3"]},
-      "area": 551695,
-    },
-    {
-      "name": {"common": "United States"},
-      "capital": ["Washington, D.C."],
-      "population": 338289857,
-      "flags": {"png": "https://flagcdn.com/w320/us.png"},
-      "languages": {"eng": "English"},
-      "currencies": {"USD": {"name": "United States dollar", "symbol": "\$"}},
-      "region": "Americas",
-      "subregion": "North America",
-      "timezones": ["UTC-10:00"],
-      "idd": {"root": "+1", "suffixes": [""]},
-      "area": 9372610,
-    },
-    {
-      "name": {"common": "China"},
-      "capital": ["Beijing"],
-      "population": 1425887337,
-      "flags": {"png": "https://flagcdn.com/w320/cn.png"},
-      "languages": {"zho": "Chinese"},
-      "currencies": {"CNY": {"name": "Chinese yuan", "symbol": "¥"}},
-      "region": "Asia",
-      "subregion": "Eastern Asia",
-      "timezones": ["UTC+08:00"],
-      "idd": {"root": "+8", "suffixes": ["6"]},
-      "area": 9707611,
-    },
-    {
-      "name": {"common": "Russia"},
-      "capital": ["Moscow"],
-      "population": 144713314,
-      "flags": {"png": "https://flagcdn.com/w320/ru.png"},
-      "languages": {"rus": "Russian"},
-      "currencies": {"RUB": {"name": "Russian ruble", "symbol": "₽"}},
-      "region": "Europe",
-      "subregion": "Eastern Europe",
-      "timezones": ["UTC+03:00"],
-      "idd": {"root": "+7", "suffixes": [""]},
-      "area": 17098242,
-    },
-    {
-      "name": {"common": "Ethiopia"},
-      "capital": ["Addis Ababa"],
-      "population": 126527060,
-      "flags": {"png": "https://flagcdn.com/w320/et.png"},
-      "languages": {"amh": "Amharic"},
-      "currencies": {"ETB": {"name": "Ethiopian birr", "symbol": "Br"}},
-      "region": "Africa",
-      "subregion": "Eastern Africa",
-      "timezones": ["UTC+03:00"],
-      "idd": {"root": "+2", "suffixes": ["51"]},
-      "area": 1104300,
-    },
-    {
-      "name": {"common": "Japan"},
-      "capital": ["Tokyo"],
-      "population": 123951692,
-      "flags": {"png": "https://flagcdn.com/w320/jp.png"},
-      "languages": {"jpn": "Japanese"},
-      "currencies": {"JPY": {"name": "Japanese yen", "symbol": "¥"}},
-      "region": "Asia",
-      "subregion": "Eastern Asia",
-      "timezones": ["UTC+09:00"],
-      "idd": {"root": "+8", "suffixes": ["1"]},
-      "area": 377930,
-    },
-  ];
-
   @override
   void initState() {
     super.initState();
     _loadDefaultCountries();
     _loadAllCountries();
 
-    // Search listener with debouncer
     _searchController.addListener(() {
       final query = _searchController.text.trim();
+
+      setState(() {
+        _isSearching = query.isNotEmpty;
+        _showSuggestions = query.isNotEmpty && _searchFocusNode.hasFocus;
+      });
+
       if (query == _searchQuery) return;
 
       _searchQuery = query;
       _debouncer.run(() {
-        search(query);
+        _updateAutocompleteSuggestions(query);
+      });
+    });
+
+    // Handle focus changes
+    _searchFocusNode.addListener(() {
+      setState(() {
+        _showSuggestions = _searchController.text.isNotEmpty &&
+            _autocompleteSuggestions.isNotEmpty &&
+            _searchFocusNode.hasFocus;
       });
     });
   }
@@ -462,6 +211,8 @@ class _HomeContentState extends State<HomeContent> {
   void dispose() {
     _searchController.dispose();
     _debouncer.dispose();
+    _searchFocusNode.dispose();
+    _removeSuggestionsOverlay();
     super.dispose();
   }
 
@@ -470,6 +221,8 @@ class _HomeContentState extends State<HomeContent> {
       displayCountries = List.from(defaultCountries);
       _autocompleteSuggestions = [];
       isLoading = false;
+      _isSearching = false;
+      _showSuggestions = false;
     });
   }
 
@@ -477,7 +230,9 @@ class _HomeContentState extends State<HomeContent> {
     setState(() => isLoading = true);
     try {
       final resp = await http.get(Uri.parse(
-          'https://restcountries.com/v3.1/all?fields=name,capital,population,flags,languages,currencies,region,subregion,timezones,idd,area'));
+          'https://restcountries.com/v3.1/all?fields=name,capital,population,flags,languages,currencies,region,subregion,timezones,idd,area'
+      ));
+
       if (resp.statusCode == 200) {
         final data = json.decode(resp.body);
         setState(() {
@@ -490,87 +245,150 @@ class _HomeContentState extends State<HomeContent> {
     setState(() => isLoading = false);
   }
 
-  void search(String query) async {
+  // NEW: Function to update autocomplete suggestions only
+  void _updateAutocompleteSuggestions(String query) async {
     query = query.trim();
     final lowerQuery = query.toLowerCase();
 
     if (query.isEmpty) {
-      _loadDefaultCountries();
-      setState(() => _autocompleteSuggestions = []);
+      setState(() {
+        _autocompleteSuggestions = [];
+      });
+      _removeSuggestionsOverlay();
       return;
     }
 
-    // Instant local filtering for suggestions and results
+    // Local filtering...
     final localMatches = allCountries.where((c) {
       final name = (c['name']['common'] as String?)?.toLowerCase() ?? '';
-      return name.contains(lowerQuery);
+      final officialName = (c['name']['official'] as String?)?.toLowerCase() ?? '';
+      return name.contains(lowerQuery) || officialName.contains(lowerQuery) || name.startsWith(lowerQuery);
     }).toList();
 
+    final suggestions = localMatches.take(5).toList();
+
     setState(() {
-      _autocompleteSuggestions = localMatches
-          .map((c) => c['name']['common'] as String? ?? 'Unknown')
-          .toList();
-      displayCountries = localMatches;
-      isLoading = false;
+      _autocompleteSuggestions = suggestions;
     });
 
-    // If no local match, fallback to API (partial name search)
-    if (localMatches.isEmpty) {
-      setState(() => isLoading = true);
-      try {
-        final resp = await http.get(Uri.parse(
-            'https://restcountries.com/v3.1/name/$query?fields=name,capital,population,flags,languages,currencies,region,subregion,timezones,idd,area'));
-        if (resp.statusCode == 200) {
-          final data = json.decode(resp.body);
-          setState(() {
-            displayCountries = data is List ? data : [data];
-            _autocompleteSuggestions = displayCountries
-                .map((c) => c['name']['common'] as String? ?? 'Unknown')
-                .toList();
-            isLoading = false;
-          });
-        } else {
-          setState(() {
-            displayCountries = [];
-            _autocompleteSuggestions = [];
-            isLoading = false;
-          });
-        }
-      } catch (e) {
+    // Show overlay after state update
+    if (suggestions.isNotEmpty && _searchFocusNode.hasFocus) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _showSuggestionsOverlay();
+      });
+    } else {
+      _removeSuggestionsOverlay();
+    }
+
+    // API fallback for more results (if local is not enough)
+    try {
+      final resp = await http.get(
+        Uri.parse(
+          'https://restcountries.com/v3.1/name/$query?fields=name,capital,population,flags,languages,currencies,region,subregion,timezones,idd,area',
+        ),
+      );
+
+      if (resp.statusCode == 200) {
+        final data = json.decode(resp.body);
+        final List<dynamic> apiResults = data is List ? data : [data];
+
+        // Merge local + API results and remove duplicates
+        final allResults = [...localMatches, ...apiResults];
+        final seen = <String>{};
+        final uniqueResults = allResults.where((country) {
+          final name = country['name']['common'] as String? ?? '';
+          return name.isNotEmpty && seen.add(name);
+        }).take(5).toList();
+
+        // Update state with final unique list
         setState(() {
-          displayCountries = [];
-          _autocompleteSuggestions = [];
-          isLoading = false;
+          _autocompleteSuggestions = uniqueResults;
         });
+
+        // Show/hide overlay based on final list
+        if (uniqueResults.isNotEmpty && _searchFocusNode.hasFocus) {
+          _showSuggestionsOverlay();
+        } else {
+          _removeSuggestionsOverlay();
+        }
       }
+    } catch (e) {
+      // Silent fail - keep local suggestions
+      print("API error in autocomplete: $e");
     }
   }
 
-  void _onFavoriteSelected(String? value) {
-    if (value == null) return;
+  void search(String query) async {
+    query = query.trim();
 
-    selectedFavorite = value;
-
-    if (value == "Africa" || value == "Asia" || value == "Europe" || value == "America") {
-      String continent = value == "America" ? "Americas" : value;
-      _showSubregionDialog(continent, _getSubregions(value));
+    if (query.isEmpty) {
+      _loadDefaultCountries();
       return;
     }
 
-    // Country favorite
-    final lowerValue = value.toLowerCase();
-    final country = defaultCountries.firstWhere(
-          (c) => (c['name']['common'] as String).toLowerCase() == lowerValue,
-      orElse: () => defaultCountries[0],
-    );
-
     setState(() {
-      _searchController.clear();
-      _searchQuery = '';
-      _autocompleteSuggestions = [];
-      displayCountries = [country];
-      isLoading = false;
+      isLoading = true;
+      _showSuggestions = false; // Hide suggestions when performing full search
     });
+
+    try {
+      final resp = await http.get(Uri.parse(
+          'https://restcountries.com/v3.1/name/$query?fields=name,capital,population,flags,languages,currencies,region,subregion,timezones,idd,area'
+      ));
+
+      if (resp.statusCode == 200) {
+        final data = json.decode(resp.body);
+        final List<dynamic> results = data is List ? data : [data];
+
+        setState(() {
+          displayCountries = results;
+          isLoading = false;
+        });
+      } else {
+        // Fallback to local search
+        final localMatches = allCountries.where((c) {
+          final name = (c['name']['common'] as String?)?.toLowerCase() ?? '';
+          return name.contains(query.toLowerCase());
+        }).toList();
+
+        setState(() {
+          displayCountries = localMatches;
+          isLoading = false;
+        });
+      }
+    } catch (e) {
+      // Fallback to local search
+      final localMatches = allCountries.where((c) {
+        final name = (c['name']['common'] as String?)?.toLowerCase() ?? '';
+        return name.contains(query.toLowerCase());
+      }).toList();
+
+      setState(() {
+        displayCountries = localMatches;
+        isLoading = false;
+      });
+    }
+  }
+
+  void _clearSearch() {
+    _searchController.clear();
+    _searchQuery = '';
+    _loadDefaultCountries();
+    setState(() {
+      _autocompleteSuggestions = [];
+      _isSearching = false;
+      _showSuggestions = false;
+    });
+  }
+
+  void _handleSuggestionSelected(dynamic country) {
+    final countryName = country['name']['common'] as String? ?? '';
+    _searchController.text = countryName;
+    search(countryName);
+    setState(() {
+      _showSuggestions = false;
+    });
+    _searchFocusNode.unfocus(); // Unfocus after selection
   }
 
   Future<void> _showSubregionDialog(String continent, List<String> subregions) async {
@@ -690,10 +508,10 @@ class _HomeContentState extends State<HomeContent> {
           childAspectRatio = 0.94;
         } else if (constraints.maxWidth >= 480) {
           columns = 2;
-          childAspectRatio = 1.02;
+          childAspectRatio = 1.09;
         } else {
           columns = 1;
-          childAspectRatio = 1.05; // emulator/phone portrait - no extra space
+          childAspectRatio = 1.10; // emulator/phone portrait - no extra space
         }
 
         final grid = GridView.builder(
@@ -978,15 +796,87 @@ class _HomeContentState extends State<HomeContent> {
     );
   }
 
+  void _showSuggestionsOverlay() {
+    _removeSuggestionsOverlay();
+
+    // Get the search field's position and size
+    final renderBox = context.findRenderObject() as RenderBox?;
+    if (renderBox == null) return;
+
+    final position = renderBox.localToGlobal(Offset.zero);
+    final size = renderBox.size;
+
+    _suggestionsOverlay = OverlayEntry(
+      builder: (context) => Positioned(
+        top: position.dy + 45,           // Below the search field
+        left: position.dx + 16,          // Align with padding
+        width: size.width - 32,          // Exact width of search field (minus padding)
+        child: Material(
+          elevation: 8,
+          borderRadius: BorderRadius.circular(12),
+          child: Container(
+            constraints: const BoxConstraints(maxHeight: 240),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: Colors.purple.shade200),
+            ),
+            child: ListView.builder(
+              padding: EdgeInsets.zero,
+              shrinkWrap: true,
+              itemCount: _autocompleteSuggestions.length,
+              itemBuilder: (context, index) {
+                final country = _autocompleteSuggestions[index];
+                final name = country['name']['common'] as String? ?? 'Unknown';
+
+                return ListTile(
+                  dense: true,
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  title: Text(name, style: const TextStyle(fontSize: 15)),
+                  onTap: () {
+                    // Fill the field and trigger search
+                    _searchController.text = name;
+                    search(name);
+
+                    // Hide overlay and suggestions immediately
+                    _removeSuggestionsOverlay();
+
+                    // Clear suggestions list
+                    setState(() {
+                      _autocompleteSuggestions = [];
+                    });
+
+                    // Unfocus keyboard
+                    _searchFocusNode.unfocus();
+                  },
+                );
+              },
+            ),
+          ),
+        ),
+      ),
+    );
+
+    Overlay.of(context).insert(_suggestionsOverlay!);
+  }
+
+  void _removeSuggestionsOverlay() {
+    if (_suggestionsOverlay != null) {
+      _suggestionsOverlay!.remove();
+      _suggestionsOverlay = null;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Column(
       children: [
+        // Search & Favorites Row
         Padding(
           padding: const EdgeInsets.all(16),
           child: Row(
             children: [
-              // Favorite Dropdown
+              // Favorites Dropdown – fixed
               Expanded(
                 child: Container(
                   height: 45,
@@ -995,11 +885,7 @@ class _HomeContentState extends State<HomeContent> {
                     borderRadius: BorderRadius.circular(20),
                     border: Border.all(color: Colors.purple, width: 1),
                     boxShadow: [
-                      BoxShadow(
-                        color: Colors.black12,
-                        blurRadius: 8,
-                        offset: const Offset(0, 4),
-                      ),
+                      BoxShadow(color: Colors.black12, blurRadius: 8, offset: Offset(0, 4)),
                     ],
                   ),
                   child: DropdownButtonHideUnderline(
@@ -1007,9 +893,7 @@ class _HomeContentState extends State<HomeContent> {
                       padding: const EdgeInsets.symmetric(horizontal: 12),
                       isExpanded: true,
                       icon: const Icon(Icons.arrow_drop_down, color: Colors.purple, size: 24),
-                      hint: const Center(
-                        child: Text("Favorites", style: TextStyle(fontSize: 17)),
-                      ),
+                      hint: const Center(child: Text("Favorites", style: TextStyle(fontSize: 17))),
                       value: selectedFavorite,
                       items: favorites.map((item) {
                         return DropdownMenuItem<String>(
@@ -1046,113 +930,152 @@ class _HomeContentState extends State<HomeContent> {
                   ),
                 ),
               ),
+
               const SizedBox(width: 12),
 
-              // Search Field with Autocomplete
+              // Search Field – simple TextField
               Expanded(
-                child: Container(
-                  height: 45,
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(20),
-                    border: Border.all(color: Colors.purple, width: 1),
-                    color: Colors.white,
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black12,
-                        blurRadius: 8,
-                        offset: const Offset(0, 2),
+                child: Stack(
+                  clipBehavior: Clip.none,
+                  children: [
+                    // Search field (unchanged)
+                    Container(
+                      height: 45,
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(30),
+                        border: Border.all(color: Colors.purple, width: 2),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.1),
+                            blurRadius: 8,
+                            offset: Offset(0, 2),
+                          ),
+                        ],
                       ),
-                    ],
-                  ),
-                  child: Autocomplete<String>(
-                    optionsBuilder: (TextEditingValue textEditingValue) {
-                      if (textEditingValue.text.isEmpty) {
-                        return const Iterable<String>.empty();
-                      }
-                      final query = textEditingValue.text.toLowerCase().trim();
-                      return allCountries
-                          .map((c) => c['name']['common'] as String? ?? 'Unknown')
-                          .where((name) => name.toLowerCase().contains(query))
-                          .toList();
-                    },
-                    onSelected: (String selection) {
-                      _searchController.text = selection;
-                      search(selection);
-                    },
-                    fieldViewBuilder: (context, controller, focusNode, onFieldSubmitted) {
-                      return TextField(
-                        controller: controller,
-                        focusNode: focusNode,
+                      child: TextField(
+                        controller: _searchController,
+                        focusNode: _searchFocusNode,
                         textAlignVertical: TextAlignVertical.center,
                         style: const TextStyle(fontSize: 16, color: Colors.black87),
                         decoration: InputDecoration(
                           hintText: "Search country...",
-                          hintStyle: TextStyle(color: Colors.grey[600], fontSize: 16),
-                          contentPadding: const EdgeInsets.symmetric(horizontal: 17, vertical: 8), // ← reduced vertical padding
-                          // Thinner and consistent borders (top & bottom same)
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            borderSide: const BorderSide(color: Colors.purple, width: 0.5),
-                          ),
-                          enabledBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            borderSide: const BorderSide(color: Colors.purple, width: 0.5),
-                          ),
-                          focusedBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            borderSide: const BorderSide(color: Colors.purple, width: 1.3), // slightly thicker only when focused
-                          ),
-                          // Optional: subtle purple shadow/glow on focus
-                          focusedErrorBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            borderSide: const BorderSide(color: Colors.red, width: 1.3),
-                          ),
-                          errorBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            borderSide: const BorderSide(color: Colors.red, width: 0.5),
-                          ),
-                          filled: true,
-                          fillColor: Colors.white,
+                          hintStyle: TextStyle(color: Colors.grey[500], fontSize: 16),
+                          contentPadding: const EdgeInsets.symmetric(horizontal: 20),
+                          border: InputBorder.none,
+                          prefixIcon: const Icon(Icons.search, color: Colors.purple, size: 22),
+                          suffixIcon: _searchController.text.isNotEmpty
+                              ? IconButton(
+                            icon: const Icon(Icons.clear, size: 20),
+                            onPressed: _clearSearch,
+                            color: Colors.purple,
+                          )
+                              : null,
                         ),
-                      );
-                    },
-                    optionsViewBuilder: (context, onSelected, options) {
-                      return Align(
-                        alignment: Alignment.topLeft,
+                        onChanged: (value) {
+                          _updateAutocompleteSuggestions(value);
+                        },
+                        onSubmitted: (value) {
+                          search(value.trim());
+                          _removeSuggestionsOverlay();
+                          _searchFocusNode.unfocus();
+                        },
+                      ),
+                    ),
+
+                    // Autocomplete dropdown — forced to be EXACTLY same width as search field
+                    if (_showSuggestions && _autocompleteSuggestions.isNotEmpty)
+                      Positioned(
+                        top: 45,
+                        left: 0,
+                        right: 0,
                         child: Material(
-                          elevation: 6,
-                          borderRadius: BorderRadius.circular(12),
+                          elevation: 4,
+                          borderRadius: BorderRadius.circular(30),
+                          clipBehavior: Clip.hardEdge, // prevents any visual overflow
                           child: Container(
-                            constraints: const BoxConstraints(maxHeight: 300, maxWidth: 350),
+                            width: double.infinity, // ← this forces exact same width as parent (search field)
+                            constraints: const BoxConstraints(maxHeight: 240),
                             decoration: BoxDecoration(
                               color: Colors.white,
-                              borderRadius: BorderRadius.circular(12),
                               border: Border.all(color: Colors.purple, width: 2),
                             ),
                             child: ListView.builder(
                               padding: EdgeInsets.zero,
                               shrinkWrap: true,
-                              itemCount: options.length,
+                              itemCount: _autocompleteSuggestions.length,
                               itemBuilder: (context, index) {
-                                final option = options.elementAt(index);
+                                final country = _autocompleteSuggestions[index];
+                                final name = country['name']['common'] as String? ?? 'Unknown';
+
                                 return ListTile(
-                                  title: Text(option),
-                                  onTap: () => onSelected(option),
+                                  dense: true,
+                                  contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                                  title: Text(
+                                    name,
+                                    style: const TextStyle(fontSize: 16, color: Colors.black87),
+                                  ),
+                                  onTap: () {
+                                    _searchController.text = name;
+                                    search(name);
+                                    _removeSuggestionsOverlay();
+                                    setState(() {
+                                      _showSuggestions = false;
+                                      _autocompleteSuggestions = [];
+                                    });
+                                    _searchFocusNode.unfocus();
+                                  },
                                 );
                               },
                             ),
                           ),
                         ),
-                      );
-                    },
-                  ),
+                      ),
+                  ],
                 ),
               ),
             ],
           ),
         ),
+
+
+        // Loading indicator
+        if (isLoading)
+          const Padding(
+            padding: EdgeInsets.all(16),
+            child: CircularProgressIndicator(color: Colors.purple),
+          ),
+
+        // Results grid
         Expanded(child: _buildResultsContent()),
       ],
     );
+  }
+
+  void _onFavoriteSelected(String? value) {
+    if (value == null) return;
+
+    selectedFavorite = value;
+
+    if (value == "Africa" || value == "Asia" || value == "Europe" || value == "America") {
+      String continent = value == "America" ? "Americas" : value;
+      _showSubregionDialog(continent, _getSubregions(value));
+      return;
+    }
+
+    // Country favorite
+    final lowerValue = value.toLowerCase();
+    final country = defaultCountries.firstWhere(
+          (c) => (c['name']['common'] as String).toLowerCase() == lowerValue,
+      orElse: () => defaultCountries[0],
+    );
+
+    setState(() {
+      _searchController.clear();
+      _searchQuery = '';
+      _autocompleteSuggestions = [];
+      displayCountries = [country];
+      isLoading = false;
+    });
   }
 }

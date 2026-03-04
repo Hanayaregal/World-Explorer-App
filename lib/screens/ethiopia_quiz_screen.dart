@@ -315,7 +315,7 @@ class _EthiopiaQuizScreenState extends State<EthiopiaQuizScreen> {
               ),
               const SizedBox(height: 20),
               Text(
-                language == AppLanguage.english ? "What is the capital?" : "ዋና ከተማው ምንድን ነው?",
+                language == AppLanguage.english ? "What is the capital?" : "ዋና ከተማው ማን ነው?",
                 style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
                 textAlign: TextAlign.center,
               ),

@@ -1,35 +1,37 @@
-import '../screens/world_quiz_screen.dart';
-//import 'world_quiz_screen.dart';
+import 'package:flutter/material.dart';
+import '../screens/smart_quiz_screen.dart';
 
 final flagCapitalData = [
   {
     "name": "France",
     "capital": "Paris",
-    "flag": "https://flagcdn.com/w320/fr.png"
+    "flags": {"png": "https://flagcdn.com/w320/fr.png"},
   },
   {
     "name": "Germany",
     "capital": "Berlin",
-    "flag": "https://flagcdn.com/w320/de.png"
+    "flags": {"png": "https://flagcdn.com/w320/de.png"},
   },
   {
     "name": "Japan",
     "capital": "Tokyo",
-    "flag": "https://flagcdn.com/w320/jp.png"
+    "flags": {"png": "https://flagcdn.com/w320/jp.png"},
   },
   {
     "name": "Brazil",
     "capital": "Brasília",
-    "flag": "https://flagcdn.com/w320/br.png"
+    "flags": {"png": "https://flagcdn.com/w320/br.png"},
   },
 ];
 
-class FlagCapitalQuizScreen extends WorldQuizScreen {
-  FlagCapitalQuizScreen({super.key})
-      : super(
-    title: "Flag to Capital Quiz",
-    quizType: "Flag → Capital",
-    data: flagCapitalData,
-    questionLabel: "capital",
-  );
+class FlagCapitalQuizScreen extends StatelessWidget {
+  const FlagCapitalQuizScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return SmartQuizScreen(
+      countries: flagCapitalData,
+      quizType: "capital", // The quiz will ask for capitals from flags
+    );
+  }
 }

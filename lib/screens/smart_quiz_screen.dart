@@ -252,11 +252,11 @@ class _SmartQuizScreenState extends State<SmartQuizScreen> {
     if (widget.quizType == "name") {
       questionText = language == AppLanguage.english
           ? "What is the name of this country?"
-          : "ይህ የቱ ሀገር ነው?";
+          : "የዚህች ሀገር ስም ማን ይባላል?";
     } else if (widget.quizType == "capital") {
       questionText = language == AppLanguage.english
           ? "What is the capital city?"
-          : "ዋና ከተማው ምንድን ነው?";
+          : "ዋና ከተማው ማን ነው?";
     } else {
       questionText = language == AppLanguage.english
           ? "What is the approximate population?"
@@ -266,7 +266,7 @@ class _SmartQuizScreenState extends State<SmartQuizScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text(
-          language == AppLanguage.english ? "World Quiz" : "ስማርት ፈተና",
+          language == AppLanguage.english ? "World Quiz" : "የአለምአቀፍ ጥያቄዎች",
           style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
         ),
         backgroundColor: Colors.purple[700],

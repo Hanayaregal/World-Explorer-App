@@ -32,8 +32,7 @@ class CountryCard extends StatelessWidget {
       onExit: (_) => onHover(-1),
       child: GestureDetector(
         onTap: () => onDetails(country),
-        child:
-        Card(
+        child: Card(
           elevation: hoveredIndex == index ? 6 : 1,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
           child: Container(
@@ -53,9 +52,8 @@ class CountryCard extends StatelessWidget {
                 ),
               ],
             ),
-
             child: Column(
-              mainAxisSize: MainAxisSize.max,
+              mainAxisSize: MainAxisSize.min,   // ← FIXED HERE
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 // Flag
@@ -81,14 +79,13 @@ class CountryCard extends StatelessWidget {
                     ),
                   ),
                 ),
-
                 const SizedBox(height: 20),
 
                 // Country Name
                 Text(
                   name,
                   style: const TextStyle(
-                    fontSize: 20,
+                    fontSize: 23,
                     fontWeight: FontWeight.bold,
                     color: Colors.black87,
                   ),
@@ -96,7 +93,6 @@ class CountryCard extends StatelessWidget {
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                 ),
-
                 const SizedBox(height: 10),
 
                 // Details
@@ -116,14 +112,13 @@ class CountryCard extends StatelessWidget {
   Widget _detailText(String label, String value) {
     final fullText = "$label $value";
 
-    // Check if this detail is long enough to need scrolling
     final isLong = value.length > 35 || value.split(',').length > 4 || value.contains(' ' * 20);
 
     if (isLong) {
       return SizedBox(
-        height: 50, // Small scrollable area (adjust 45–60px as you like)
+        height: 50,
         child: SingleChildScrollView(
-          scrollDirection: Axis.horizontal, // Horizontal scroll for long names
+          scrollDirection: Axis.horizontal,
           child: Padding(
             padding: const EdgeInsets.symmetric(vertical: 4),
             child: Text(
@@ -140,7 +135,6 @@ class CountryCard extends StatelessWidget {
       );
     }
 
-    // Normal short detail — no scroll
     return Text(
       fullText,
       style: const TextStyle(
